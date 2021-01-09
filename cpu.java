@@ -82,11 +82,16 @@ public class cpu {
     rPC += 2;
   }
 
+
+  public int arg(int amount){
+    return memory[rPC + amount];
+  }
+
   public void run(){
     do{
       switch (memory[rPC]){
         case 0: halt();
-        case 1: clrr(memory[rPC+1]);
+        case 1: clrr(arg(1));
         case 2: 
         case 3:
         case 4:
