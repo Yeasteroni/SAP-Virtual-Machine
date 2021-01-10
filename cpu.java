@@ -5,12 +5,11 @@ import java.io.FileNotFoundException;
 public class cpu {
   private int[] memory;
   private int[] register;
-  private int rPC;//Program Counter, stores memory location you are executing from.
-  private int rCP;//If this is set to 0, then the compare was equal. If it is 1 then arg(1) < arg(2). If it is 2 then arg(1) > arg(2).
+  private int rPC;// Program Counter, stores memory location you are executing from.
+  private int rCP;// If this is set to 0, then the compare was equal. If it is 1 then arg(1) < arg(2). If it is 2 then arg(1) > arg(2).
   private int rST;
 
   public cpu() {
-    // will find out about this.
     this.memory = new int[10000];
     this.register = new int[10];
     this.rPC = 0;
@@ -22,14 +21,17 @@ public class cpu {
 
   //0
   private void halt() {// Halts the program
-    rPC += 1;
     System.exit(0);
   }
 
   //1
   private void clrr(int r1) {// Clears register r1
-    register[r1] = 0;
-    rPC += 2;
+    if (isRegisterInBounds(r1) == true){
+      register[r1] = 0;
+      rPC += 2;
+    }else{
+      outOfBoundsError("clrr", 1, r1 + " is not a valid register ID.");
+    }
   }
 
   //2
@@ -83,7 +85,7 @@ public class cpu {
   }
 
   //12
-  private void addir(int constant, int r1){
+  private void addir(int constant, int r1){// Add the integer constant to the contents of register r1.
     register[r1] += constant;
     rPC += 3;
   }
@@ -95,36 +97,39 @@ public class cpu {
   }
 
   //34
-  private void cmprr(int r1, int r2){//
-    if (register[r1] == register[r2]){
+  private void cmprr(int r1, int r2){// Compare the contents of register r1 with the contents of register r2.
+    if (register[r1] == register[r2]){// If they are equal, then set rCP (compare register) to 0
       rCP = 0;
-    }else if (register[r1] < register[r2]){
+    }else if (register[r1] < register[r2]){// If the contents of register r1 is less than the contents of register r2, then set rCP (compare register) to 1.
       rCP = 1;
-    }else{
+    }else{// If the contents of register r1 is more then the contents of register r2, then set rCP (compare register) to 2.
       rCP = 2;
     }
     rPC += 3;
   }
 
   //45
-  private void outcr(int r1){//Output the character in register r1 to the console
-    if (r1 < 128 && r1 >= 0){
+  private void outcr(int r1){// Convert the integer stored in register r1 into an ASCII character and print it to the console.
+    if (isRegisterInBounds(r1) == true){
+      if (register[r1] < 128 && register[r1] >= 0){// If the contents of register r1 is a valid ASCII character, then convert it to that ASCII character and print it.
       System.out.print(String.valueOf( (char) (register[r1]) ));
-    }else{
-      exit("The integer in register " + r1 + " with the value of " + register[r1] + " is not a valid ASCII character.");
+      }else{// If the contents of register r1 is not a valid ASCII character, throw an appropriate error and terminate the program.
+      outOfBoundsError("outcr", 1, "The contents of register " + r1 + " with value of " + register[r1] + " is not a valid ASCII character.");
     }
     rPC += 2;
+    }else{
+      outOfBoundsError("outcr", 1, r1 + " is not a valid register ID.");
+    }
   }
 
   //49
-  private void printi(int r1) {// Print contents of register r1 to the console
+  private void printi(int r1) {// Print the contents of register r1 to the console as an integer.
     System.out.print(register[r1]);
     rPC += 2;
   }
 
   //55
-  private void outs(int label){
-    //System.out.print("bruh");
+  private void outs(int label){// Print the string starting at the memory location label. The memory location label specifies the length of the string in characters (how many memory locations long the string is going to be), and each following memory location is converted to an ASCII character.
     int length = memory[label];
     int[] encoded = new int[length];
     String result = "";
@@ -137,7 +142,6 @@ public class cpu {
     }
 
     System.out.print(result);
-    //System.out.print("bruh v2");
     rPC += 2;
   }
 
@@ -153,8 +157,8 @@ public class cpu {
   public void run(String path){
     int[] binary = Utils.readTextFile(path);
     // copy binary into memory (excluding first 2 elements)
-    for (int i=2;i<binary.length;i++){
-      memory[i-2] = binary[i];
+    for (int i = 2; i < binary.length; i++){
+      memory[i - 2] = binary[i];
     }
 
     rPC = binary[1];
@@ -218,18 +222,35 @@ public class cpu {
         case 55: outs(arg(1)); break;
         case 56:
         case 57: jmpne(arg(1)); break;
-        default: exit("The instruction code called at memory location " + rPC + " with value of " + memory[rPC] + " is not valid.");
+        default: exit("The instruction code called at memory location " + rPC + " with value of " + memory[rPC] + " is not a valid instruction ID.");
       }
     }
     System.out.println("You have reached the end of the program.");
   }
 
-  private int arg(int amount){//Returns the memory location that the  
+  private int arg(int amount){//Returns the memory location that the argument specifies.
     return memory[rPC + amount];
+  }
+
+  private void outOfBoundsError(String instructionName, int argumentWithError, String errorMessage){
+    System.out.println("Error!");
+    System.out.println("  Program Counter: " + rPC);
+    System.out.println("  Instruction: " + instructionName);
+    System.out.println("  Malformed Statement: " + argumentWithError);
+    System.out.println("  " + errorMessage);
+    System.exit(1);
   }
 
   private void exit(String message){
     System.out.println(message);
     System.exit(1);
+  }
+
+  private boolean isRegisterInBounds(int r){
+    if (r >= 0 && r < register.length){
+      return true;
+    }else{
+      return false;
+    }
   }
 }
