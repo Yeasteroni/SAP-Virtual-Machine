@@ -17,86 +17,105 @@ public class cpu {
     this.rST = 0;
   }
 
-  //These are the individual opcodes
+  // These are the individual opcodes
 
-  //0
+  // 0
   private void halt() {// Halts the program
     System.exit(0);
   }
 
-  //1
+  // 1
   private void clrr(int r1) {// Clears register r1
     if (isRegisterInBounds(r1) == true){
       register[r1] = 0;
       rPC += 2;
     }else{
-      outOfBoundsError("clrr", 1, r1 + " is not a valid register ID.");
+      genericError("clrr", 1, r1 + " is not a valid register ID.");
     }
   }
 
-  //2
+  // 2
   private void clrx(int r1) {// Clears memory location specified by register r1
-    memory[register[r1]] = 0;
-    rPC += 2;
+    if (isRegisterInBounds(r1) == true){
+      if (isMemoryLocationInBounds(register[r1]) == true){
+        memory[register[r1]] = 0;
+        rPC += 2;
+      }else{
+        genericError("clrx", 1, " ");
+      }
+    }else{
+      genericError("clrx", 1, r1 + " is not a valid register ID.");
+    }
   }
 
-  //3
+  // 3
   private void clrm(int label) {// Clears memory location specified by label
     memory[label] = 0;
     rPC += 2;
   }
 
-  //4
+  // 4
   private void clrb(int r1, int r2) {// Clears number of memory locations specified by register r2, starting from the memory location specified by r1
     for (int i = 0; i < r2; i++) {
-      memory[register[r1] + i] = 0;// The worksheet doesn't specify whether r1 is an int or a memory location
+      memory[register[r1] + i] = 0;
     }
     rPC += 3;
   }
 
-  //5
+  // 5
   private void movir(int number, int r1) {// Move number to register r1
     register[r1] = number;
     rPC += 3;
   } 
 
-  //6
+  // 6
   private void movrr(int r1, int r2) {// Copy the contents of register r1 to register r2
     register[r2] = register[r1];
     rPC += 3;
   }
 
-  //7
+  // 7
   private void movrm(int r1, int label) {// Move contents of register r1 to memory location label
     memory[label] = register[r1];
     rPC += 3;
   }
 
-  //8
+  // 8
   private void movmr(int label1, int r1) {// Move contents of memory location label1 to register r1
     register[r1] = memory[label1];
     rPC += 3;
   }
 
-  //9
+  // 9
   private void movxr(int r1, int r2) {// This is probably wrong, the table is unclear. Move contents of memory location specified by r1 to r2
     register[r2] = memory[register[r1]];
     rPC += 3;
   }
 
-  //12
+  // 10
+  private void movar(int label, int r1){// The table is unclear.
+  }
+
+  //11
+  private void movb(int r1, int r2, int r3){// Move the block of memory locations, with initial memory location specified by the contents of register r1 and length specified by the contents of register r2, to the memory location specified by the contents of register r3 and however many memory locations specified afterwards by the contents of register r2.
+    for (int i = 0, i < register[r3]){
+      memory[register[r2 + i] = memory[register[r1 + i]];
+    }
+  }
+
+  // 12
   private void addir(int constant, int r1){// Add the integer constant to the contents of register r1.
     register[r1] += constant;
     rPC += 3;
   }
 
-  //13
+  // 13
   private void addrr(int r1, int r2) {// Add contents of register r1 to register r2
     register[r2] += register[r1];
     rPC += 3;
   }
 
-  //34
+  // 34
   private void cmprr(int r1, int r2){// Compare the contents of register r1 with the contents of register r2.
     if (register[r1] == register[r2]){// If they are equal, then set rCP (compare register) to 0
       rCP = 0;
@@ -108,27 +127,27 @@ public class cpu {
     rPC += 3;
   }
 
-  //45
+  // 45
   private void outcr(int r1){// Convert the integer stored in register r1 into an ASCII character and print it to the console.
     if (isRegisterInBounds(r1) == true){
       if (register[r1] < 128 && register[r1] >= 0){// If the contents of register r1 is a valid ASCII character, then convert it to that ASCII character and print it.
       System.out.print(String.valueOf( (char) (register[r1]) ));
       }else{// If the contents of register r1 is not a valid ASCII character, throw an appropriate error and terminate the program.
-      outOfBoundsError("outcr", 1, "The contents of register " + r1 + " with value of " + register[r1] + " is not a valid ASCII character.");
+      genericError("outcr", 1, "The contents of register " + r1 + " with value of " + register[r1] + " is not a valid ASCII character.");
     }
     rPC += 2;
     }else{
-      outOfBoundsError("outcr", 1, r1 + " is not a valid register ID.");
+      genericError("outcr", 1, r1 + " is not a valid register ID.");
     }
   }
 
-  //49
+  // 49
   private void printi(int r1) {// Print the contents of register r1 to the console as an integer.
     System.out.print(register[r1]);
     rPC += 2;
   }
 
-  //55
+  // 55
   private void outs(int label){// Print the string starting at the memory location label. The memory location label specifies the length of the string in characters (how many memory locations long the string is going to be), and each following memory location is converted to an ASCII character.
     int length = memory[label];
     int[] encoded = new int[length];
@@ -145,8 +164,8 @@ public class cpu {
     rPC += 2;
   }
 
-  //57
-  private void jmpne(int label){//If the compare register is not set to equal (0), then set rPC to the memory location specified by label.
+  // 57
+  private void jmpne(int label){// If the compare register is not set to equal (0), then set rPC to the memory location specified by label.
     if (rCP != 0){
       rPC = label;
     }else{
@@ -232,11 +251,10 @@ public class cpu {
     return memory[rPC + amount];
   }
 
-  private void outOfBoundsError(String instructionName, int argumentWithError, String errorMessage){
+  private void genericError(String instructionName, int argumentWithError, String errorMessage){
     System.out.println("Error!");
-    System.out.println("  Program Counter: " + rPC);
-    System.out.println("  Instruction: " + instructionName);
-    System.out.println("  Malformed Statement: " + argumentWithError);
+    System.out.println("  Program Counter: " + rPC + ", Instruction: " + instructionName);
+    System.out.println("  Malformed Statement: " + argumentWithError + ", Value: " + memory[rPC + argumentWithError]);
     System.out.println("  " + errorMessage);
     System.exit(1);
   }
@@ -248,6 +266,14 @@ public class cpu {
 
   private boolean isRegisterInBounds(int r){
     if (r >= 0 && r < register.length){
+      return true;
+    }else{
+      return false;
+    }
+  }
+
+  private boolean isMemoryLocationInBounds(int memoryLocation){
+    if (memoryLocation >= 0 || memoryLocation < memory.length){
       return true;
     }else{
       return false;
