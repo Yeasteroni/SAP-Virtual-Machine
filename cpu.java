@@ -98,8 +98,8 @@ public class cpu {
 
   //11
   private void movb(int r1, int r2, int r3){// Move the block of memory locations, with initial memory location specified by the contents of register r1 and length specified by the contents of register r2, to the memory location specified by the contents of register r3 and however many memory locations specified afterwards by the contents of register r2.
-    for (int i = 0, i < register[r3]){
-      memory[register[r2 + i] = memory[register[r1 + i]];
+    for (int i = 0; i < register[r3]; i++){
+      memory[register[r2 + i]] = memory[register[r1 + i]];
     }
   }
 
@@ -114,6 +114,79 @@ public class cpu {
     register[r2] += register[r1];
     rPC += 3;
   }
+  // 14
+  private void addmr(int label, int r1) // Add the contents of memory location label to r1.
+  {
+    register[r1] += label;
+    rPC += 3;
+  }
+
+  //FLAGGED
+  // 15
+  private void addxr(int r1, int r2) // Add the contents of the memory location specified by r1 to r2
+  {
+    register[r2] += memory[register[r1]];
+    rPC += 3;
+  }
+
+  // 16
+  private void subir(int value, int r1) // Subtract the constant value from r1.
+  {
+    register[r1] -= value;
+    rPC += 3;
+  }
+
+  // 17
+  private void subrr(int r1, int r2) // Subtract the contents of register r1 from r2.
+  {
+    register[r2] -= register[r1];
+    rPC += 3;
+  }
+
+  // 18
+  private void submr(int label, int r1) // Subtract the contents of memory location label from r1.
+  {
+    register[r1] -= label;
+    rPC += 3;
+  }
+
+  // FLAGGED
+  // 19
+  private void subxr(int r1, int r2) // Subtract the contents of the memory location specified by r1 from r2
+  {
+    register[r2] -= memory[register[r1]];
+    rPC += 3;
+  }
+
+  // 20
+  private void mulir(int value, int r1) // Multiply the constant value to r1.
+  {
+    register[r1] *= value;
+    rPC += 3;
+  }
+
+  // 21
+  private void mulrr(int r1, int r2) // Multiply the contents of register r1 to r2.
+  {
+    register[r2] *= register[r1];
+    rPC += 3;
+  }
+
+  // 22
+  private void mulmr(int label, int r1) // Multiply the contents of memory location label to r1.
+  {
+    register[r1] *= label;
+    rPC += 3;
+  }
+
+  //FLAGGED
+  // 23
+  private void mulxr(int r1, int r2) // Multiply the contents of the memory location specified by r1 to r2
+  {
+    register[r2] *= register[memory[r1]];
+    rPC += 3;
+  }
+
 
   // 34
   private void cmprr(int r1, int r2){// Compare the contents of register r1 with the contents of register r2.
